@@ -7,13 +7,17 @@ const app = express();
 
 // Middleware
 app.use(cors());
-// Increased JSON limit to handle large CSV batch payloads
 app.use(express.json({ limit: '50mb' })); 
 
 // Initialize Groq AI
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY }); 
 
-// The new incremental batch processing route
+// ✅ HEALTH CHECK ROUTE: Fixes the "Cannot GET /" error on Render
+app.get('/', (req, res) => {
+    res.status(200).send('GrowEasy CSV Importer API is up and running securely!');
+});
+
+// AI Batch Processing Route
 app.post('/api/process-batch', async (req, res) => {
     const { batch } = req.body;
     
@@ -37,21 +41,13 @@ app.post('/api/process-batch', async (req, res) => {
         Respond ONLY with a valid JSON array. Do not include markdown formatting, backticks, or explanations. Just the raw JSON array.
         `;
 
-        // Using the active, supported Llama 3.1 model
         const chatCompletion = await groq.chat.completions.create({
-            messages: [
-                {
-                    role: "user",
-                    content: prompt,
-                },
-            ],
+            messages: [{ role: "user", content: prompt }],
             model: "llama-3.1-8b-instant", 
-            temperature: 0, // Strict deterministic output
+            temperature: 0, 
         });
 
         let rawText = chatCompletion.choices[0]?.message?.content || "";
-        
-        // Clean up markdown block formatting if the AI accidentally includes it
         rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const formattedData = JSON.parse(rawText);
 
@@ -66,5 +62,4 @@ app.post('/api/process-batch', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Ready to accept CSV batches via POST /api/process-batch`);
 });
