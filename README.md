@@ -48,7 +48,7 @@ To run this project on your local machine, follow these steps:
 
 ### 1. Clone the repository
 \`\`\`bash
-git clone https://github.com/your-username/groweasy-assignment.git
+git clone https://github.com/chinmaymulik/groweasy-csv-importer
 cd groweasy-assignment
 \`\`\`
 
